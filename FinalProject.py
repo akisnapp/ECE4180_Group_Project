@@ -97,7 +97,7 @@ perspectiveMatrix = np.matrix([
 
 
 
-
+# UNUSED FUNCTION
 def updateCamera():
     cameraLocation = np.matrix([20*math.cos(c), 20*math.sin(c), 0])
     n = np.matrix([-math.cos(c), -math.sin(c), 0], dtype=float)
@@ -132,7 +132,6 @@ def updateCamera():
     ], dtype=float)
 
     # End Perspective Matrix Creation
-
 
 
 
