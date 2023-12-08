@@ -1,3 +1,20 @@
+#code-container {
+  width: 500px; // Adjust width as needed
+  height: 300px; // Adjust height as needed
+  overflow-y: scroll; // Enable vertical scrolling
+  border: 1px solid #ddd;
+  padding: 10px;
+  background-color: #f8f9fa;
+}
+
+#code-container pre {
+  font-family: monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 10px;
+  background-color: #f0f0f0;
+}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -17,6 +34,177 @@
   </ol>
   <iframe width="560" height="315" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>
   <h2>Code</h2>
+  <div id="code-container" class="code-box">
+  <pre>
+  #include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <imumaths.h>
+#include "mbed.h"
+#include "ultrasonic.h"
+
+/* Set the delay between fresh samples */
+#define BNO055_SAMPLERATE_DELAY_MS (100)
+
+Serial pc(USBTX, USBRX);
+I2C i2c(p9, p10);
+Adafruit_BNO055 bno = Adafruit_BNO055(-1, BNO055_ADDRESS_A, &i2c);
+
+PwmOut speaker(p21);
+
+DigitalIn button(p22);
+DigitalIn reset(p23);
+
+float location[3] = {0.0, 0.0, 0.0};
+int prev_height = 0;
+int prev = 1;
+float init_height;
+void dist(int distance)
+{
+    //put code here to execute when the distance has changed
+    if (reset == 0) {
+        location[1] = 0;
+        prev_height = 0;
+    } else {
+        if (distance > prev_height + 5) {
+            location[1] = init_height - 5;
+        } else if (distance < prev_height - 5) {
+            location[1] = init_height + 5;
+        } else {
+            location[1] = init_height - (distance / 10.0);
+        }
+    }
+
+    if (!init_height) {
+        init_height = distance / 10.0;
+    }
+    /*if (button == 0) {
+        pc.printf("Distance %d mm\r\n", distance);
+    }*/
+}
+
+
+ultrasonic mu(p6, p7, .1, 1, &dist);    //Set the trigger pin to D8 and the echo pin to D9
+                                        //have updates every .1 seconds and a timeout after 1
+                                        //second, and call dist when the distance changes
+
+
+void loop();
+
+/**************************************************************************/
+/*
+    Arduino setup function (automatically called at startup)
+*/
+/**************************************************************************/
+int main()
+{
+  pc.baud(115200);
+  pc.printf("Orientation Sensor Raw Data Test\r\n");
+
+  mu.startUpdates();
+  button.mode(PullUp);
+  reset.mode(PullUp);
+  //mu.startUpdates();//start measuring the distance
+
+  /* Initialise the sensor */
+  if(!bno.begin())
+  {
+    /* There was a problem detecting the BNO055 ... check your connections */
+    pc.printf("Ooops, no BNO055 detected ... Check your wiring or I2C ADDR!\r\n");
+    while(1);
+  }
+  else
+    pc.printf("BNO055 was detected!\r\n");
+
+  wait(1);
+  
+  mu.checkDistance();
+
+  //int[] location = {0, 0, 0};
+  /* Display the current temperature */
+  int8_t temp = bno.getTemp();
+  pc.printf("Current Temperature: %d C\r\n", temp);
+  bno.setExtCrystalUse(true);
+
+  pc.printf("Calibration status values: 0=uncalibrated, 3=fully calibrated\r\n");
+
+  while(true)
+      loop();
+}
+
+/**************************************************************************/
+/*
+    Arduino loop function, called once 'setup' is complete (your own code
+    should go here)
+*/
+/**************************************************************************/
+void loop(void)
+{
+
+    mu.checkDistance();     //call checkDistance() as much as possible, as this is where
+                            //the class checks if dist needs to be called.
+
+  // Possible vector values can be:
+  // - VECTOR_ACCELEROMETER - m/s^2
+  // - VECTOR_MAGNETOMETER  - uT
+  // - VECTOR_GYROSCOPE     - rad/s
+  // - VECTOR_EULER         - degrees
+  // - VECTOR_LINEARACCEL   - m/s^2
+  // - VECTOR_GRAVITY       - m/s^2
+  imu::Vector<3> euler = bno.getVector(Adafruit_BNO055::VECTOR_EULER);
+  
+  /* Display the floating point data */
+  if (reset == 0) {
+      location[0] = 0;
+      location[2] = 0;
+  } else {
+      if (euler.y() / 3 > 5) {
+          location[2] += 5;
+      } else {
+          location[2] += euler.y() / 3;
+      }
+      if (euler.z() / 3 > 5) {
+          location[0] += 5;
+      } else {
+        location[0] += euler.z() / 3;
+      }
+  }
+  if (button == 0) {
+    //pc.printf("EULER: X: %f Y: %f Z: %f\r\n", euler.x(), euler.y(), euler.z());
+    pc.printf("X: %f Y: %f Z: %f\r\n", location[0], location[1], location[2]);
+    speaker = 0.5;
+  } else {
+      speaker = 0;
+  }
+  if (prev == 0 && button == 1) {
+      pc.printf("b\r\n");
+  }
+  prev = button;
+
+  /*
+  // Quaternion data
+  imu::Quaternion quat = bno.getQuat();
+  Serial.print("qW: ");
+  Serial.print(quat.w(), 4);
+  Serial.print(" qX: ");
+  Serial.print(quat.y(), 4);
+  Serial.print(" qY: ");
+  Serial.print(quat.x(), 4);
+  Serial.print(" qZ: ");
+  Serial.print(quat.z(), 4);
+  Serial.print("\t\t");
+  */
+
+
+  /* Display calibration status for each sensor. */
+  uint8_t system, gyro, accel, mag = 0;
+  bno.getCalibration(&system, &gyro, &accel, &mag);
+  //pc.printf("CALIBRATION: Sys=%d, Gyro=%d, Accel=%d, Mag=%d\r\n", (int)(system), (int)(gyro), (int)(accel), (int)(mag));
+  wait_ms(BNO055_SAMPLERATE_DELAY_MS * 2);
+}
+
+  </pre>
+  </div>
+
   <p>The Python code is based off the Direct3D API to draw the primitives.</p>
   <h2>Hardware</h2>
   <img src="https://github.com/ECE41803DPEN/ECE4180_Group_Project/blob/main/IMG/schem1.png?raw=true" alt="IMAGE_ALT_TEXT" width="560" height="315">
