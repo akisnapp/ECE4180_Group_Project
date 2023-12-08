@@ -17,26 +17,9 @@
   </ol>
   <iframe width="560" height="315" src="https://www.youtube.com/embed/VIDEO_ID" frameborder="0" allowfullscreen></iframe>
   <h2>Code</h2>
-  #code-container {
-  width: 500px; // Adjust width as needed
-  height: 300px; // Adjust height as needed
-  overflow-y: scroll; // Enable vertical scrolling
-  border: 1px solid #ddd;
-  padding: 10px;
-  background-color: #f8f9fa;
-}
-
-#code-container pre {
-  font-family: monospace;
-  font-size: 14px;
-  line-height: 1.5;
-  padding: 10px;
-  background-color: #f0f0f0;
-}
-
-  <div id="code-container" class="code-box">
-  <pre>
-  #include <Adafruit_Sensor.h>
+ <div id="code-container" style="width: 500px; height: 300px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px; background-color: #f8f9fa;">
+<pre style="font-family: monospace; font-size: 14px; line-height: 1.5; padding: 10px; background-color: #f0f0f0;">
+#include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <imumaths.h>
 #include "mbed.h"
@@ -202,8 +185,10 @@ void loop(void)
   wait_ms(BNO055_SAMPLERATE_DELAY_MS * 2);
 }
 
-  </pre>
-  </div>
+</pre>
+</div>
+
+</div>
 
   <p>The Python code is based off the Direct3D API to draw the primitives.</p>
   <h2>Hardware</h2>
