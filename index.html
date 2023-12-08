@@ -16,12 +16,28 @@
     in Python that was based off of the Direct3D API (which is a subset of DirectX). This allowed world space coordinates calculated by the Mbed to be transferred over to this pipeline 
     and then provide live updates on the GUI so that it was easier for users to draw.
   </p>
-  <h2>Instructions</h2>
+  <h2>Usage and Demonstration</h2>
+  <h3>Instructions</h3>
   <ol>
     <li>Connect the MBed to a PC running the application.</li>
-    <li>Move the device to see the corresponding vectors drawn in the 3D space.</li>
-    <li>Press the button to stop the drawing.</li>
+    <li>Move the device to move your location in 3D space.</li>
+    <li>Hold down the 'draw' pushbutton to trace your movement on the GUI and draw in 3D space.</li>
+    <li>Release the button to stop drawing.</li>
   </ol>
+  <h3>User Inputs/Controls from Mbed</h3>
+  <ol>
+    <li>'Pen' up/down via first pushbutton</li>
+    <li>Location reset​ via second pushbutton</li>
+    <li>Color control​ in RGB via 3 potentiometers</li>
+  </ol>
+  <h3>User Inputs/Controls from Pipeline</h3>
+  <ol>
+    <li>Camera position and view direction​</li>
+    <li>Diffuse lighting (light source position & color)​</li>
+    <li>Field of View (FoV), near frustum, and far frustum​</li>
+    <li>Object location and rotation​</li>
+  </ol>
+  <h3>Video Demonstration</h2>
   <iframe width="560" height="315" src="https://www.youtube.com/embed/60cgJFL0n3M?si=_XD0Q1-bLUG918vN" frameborder="0" allowfullscreen></iframe>
   <h2>Code</h2>
   <img src="https://github.com/ECE41803DPEN/ECE4180_Group_Project/blob/main/IMG/Picture1.png?raw=true" alt="IMAGE_ALT_TEXT" width="560" height="315">
@@ -34,8 +50,7 @@
     'pen' down mode. Additionally the Mbed accounts for one additional pushbutton which allows the user to reset the current location they are at in the real world to (0, 0, 0) so 
     that they can relocate themselves to the center of the virtual environment easily and then continue drawing from there. After all these calculations are done alongside with the 
     extra features being updated, the code proceeds to serially send the world space calculations along with the users chosen RGB color to the computer it is connected to where 
-    the GPU pipeline programmed in Python takes over.
-
+    the GPU pipeline programmed in Python takes over.<br><br>
     Once the GPU pipelines camera information and virtual environment has been set up (which happens in parallel with the Mbed coding undergoing its setup before entering its loop), then 
     it proceeds into a loop where each coordinate is calculated and rendered onto the GUI in a continuous stream as data comes in so that it is easier for the user to see what they 
     are drawing. It does this by doing a series of matrix multiplications which are supported by NumPy. Each point given from the Mbed creates a triangle with the point behind it and the 
