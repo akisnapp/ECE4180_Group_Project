@@ -10,27 +10,63 @@
   <li>Alexander Snapp</li>
   <li>John Donahoe</li>
   <li>Andrew McBurnett</li>
-  <p>This project uses a sonar sensor and an IMU to track the movement of a device in 3D space. 
-  The data is sent over serial to a Python script that uses custom code based off of the Direct3D API to visualize the movement in real time.</p>
-  <h2>Instructions</h2>
+  <h2>Project Description</h2>
+    <p>This project uses Mbed LPC1768 to operate on data pulled from an HC-SR04 ultrasonic sensor and an BNO-055 IMU in order to track the movement of a device in 3D space, and
+      then send this data over to a computer via serial after which it is processed in a GPU pipeline. This allows users to draw in 3-D space in real-time by physically moving the embedded system 
+      in the real world, and then seeing this transferred over to a 3-D virtual drawing environment in real-time. The code we designed for the GPU pipeline was a custom GPU pipeline 
+      in Python that was based off of the Direct3D API (which is a subset of DirectX). This allowed world space coordinates calculated by the Mbed to be transferred over to this pipeline 
+      and then provide live updates on the GUI so that it was easier for users to draw.
+    </p>
+  <h2>Usage and Demonstration</h2>
+  <h3>Instructions</h3>
   <ol>
-    <li>Connect the MBed to a PC running the application.</li>
-    <li>Move the device to see the corresponding vectors drawn in the 3D space.</li>
-    <li>Press the button to stop the drawing.</li>
+    
+    <li>Connect the MBed running the Mbed code downloadable on the GitHub page to a PC running the Python GPU Pipeline code.</li>
+    <li>Move the device to move your location in 3D space.</li>
+    <li>Hold down the 'draw' pushbutton to trace your movement on the GUI and draw in 3D space.</li>
+    <li>Release the button to stop drawing.</li>
   </ol>
-  <iframe width="560" height="315" src="https://www.youtube.com/embed/60cgJFL0n3M?si=_XD0Q1-bLUG918vN" frameborder="0" allowfullscreen></iframe>
+  <h3>User Inputs/Controls from Mbed</h3>
+  <ol>
+    <li>'Pen' up/down via first pushbutton</li>
+    <li>Location reset​ via second pushbutton</li>
+    <li>Color control​ in RGB via 3 potentiometers</li>
+  </ol>
+  <h3>User Inputs/Controls from Pipeline</h3>
+  <ol>
+    <li>Camera position and view direction​</li>
+    <li>Diffuse lighting (light source position & color)​</li>
+    <li>Field of View (FoV), near frustum, and far frustum​</li>
+    <li>Object location and rotation​</li>
+  </ol>
+  <h3>Video Demonstration</h2>
+  <iframe width="560" height="315" src="https://www.youtube.com/embed/1Yy-fVK64YQ?si=8xQCNw8dnHe8JZTY" frameborder="0" allowfullscreen></iframe>
   <h2>Code</h2>
   <img src="https://github.com/ECE41803DPEN/ECE4180_Group_Project/blob/main/IMG/Picture1.png?raw=true" alt="IMAGE_ALT_TEXT" width="560" height="315">
   <img src="https://github.com/ECE41803DPEN/ECE4180_Group_Project/blob/main/IMG/Picture2.png?raw=true" alt="IMAGE_ALT_TEXT" width="560" height="315">
-  <p>Using NumPy to preserve easy matrix multiplication and other functions in the Python Script. Necessary functions include multiplication, cross product, dot product, and normalization.
-  Each point given from the Mbed creates a triangle with the point behind it and the next point. The third vertex of the triangle comes from the midpoint of the 2 points plus the normalized cross product. 
-  Follows the general pipeline idea of DirectX3D, with some changes in the order. Z-Sorting is necessary at the end to draw items from back to front, so the user sees the closest items</p>
+  <p>
+    Our code worked by using the Mbed code below to sample data from the hardware and then use this data to add to or subtract from a corresponding value in an array which 
+    stored the previous location the user was last at in world space when data was previously sampled. While doing this, the code also provides audio to allow the user to know 
+    whether they are drawing (a pushbutton is used to indicate whether the user wants to be in 'pen' down mode) and uses input from 3 different potentiometers to determine the 
+    color the user wants to draw with. This color is additionally displayed to an RGB LED so the user can more easily decide what color they would like to use before they enter 
+    'pen' down mode. Additionally the Mbed accounts for one additional pushbutton which allows the user to reset the current location they are at in the real world to (0, 0, 0) so 
+    that they can relocate themselves to the center of the virtual environment easily and then continue drawing from there. After all these calculations are done alongside with the 
+    extra features being updated, the code proceeds to serially send the world space calculations along with the users chosen RGB color to the computer it is connected to where 
+    the GPU pipeline programmed in Python takes over.<br><br>
+    Once the GPU pipelines camera information and virtual environment has been set up (which happens in parallel with the Mbed coding undergoing its setup before entering its loop), then 
+    it proceeds into a loop where each coordinate is calculated and rendered onto the GUI in a continuous stream as data comes in so that it is easier for the user to see what they 
+    are drawing. It does this by doing a series of matrix multiplications which are supported by NumPy. Each point given from the Mbed creates a triangle with the point behind it and the 
+    next point. The third vertex of the triangle comes from the midpoint of the 2 points plus the normalized cross product. Following this, the matrix multiplications on these vertices coordinates 
+    begin. These matrix multiplications initially start off with the coordinates being multiplied by the rotation and translation matrices, followed by view transforms being applied and 
+    then perspective transforms being applied. After this Z-Sorting is necessary at the end to draw items from back to front, so the user sees the closest items at the frontmost part of their 
+    view and doesn't see items covered to their view by this item. After this viewport transforms are applied and the coordinates are all rendered to the GUI in screenspace.
+  </p>
   <h2>Mbed Code</h2>
  <div id="code-container" style="width: 1000px; height: 500px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px; background-color: #f8f9fa;">
 <pre style="font-family: monospace; font-size: 14px; line-height: 1.5; padding: 10px; background-color: #f0f0f0;">
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BNO055.h>
-#include <imumaths.h>
+#include &ltAdafruit_Sensor.h&gt
+#include &ltAdafruit_BNO055.h&gt
+#include &ltimumaths.h&gt
 #include "mbed.h"
 #include "ultrasonic.h"
 
@@ -520,7 +556,8 @@ pygame.quit()
 </div>
 
   <h2>Hardware</h2>
-  <img src="https://github.com/ECE41803DPEN/ECE4180_Group_Project/blob/main/IMG/finalDiagram1.png?raw=true" alt="IMAGE_ALT_TEXT" width="560" height="315">
+  <img src="https://github.com/ECE41803DPEN/ECE4180_Group_Project/blob/main/IMG/hardware_diagram.png?raw=true" alt="IMAGE_ALT_TEXT" width="560" height="315">
+  <h3>Components list</h3>
   <ul>
     <li>HC-SR04 Ultrasonic Distance sensor</li>
     <li>BNO-055 Absolute Orientation sensor (IMU)</li>
@@ -532,9 +569,9 @@ pygame.quit()
   </ul>
   <h2>Contributions</h2>
   <ul>
-    <li>Alexander: Hardware and MBed code</li>
-    <li>John: Python code</li>
-    <li>Drew: Website documentation and hardware debugging</li>
+    <li>Alexander Snapp: Hardware, MBed code, parts of Python coding, part of website documentation</li>
+    <li>John Donahoe: MBed code, Python code</li>
+    <li>Andrew McBurnett: Website documentation and hardware debugging</li>
   </ul>
 </body>
 </html>
